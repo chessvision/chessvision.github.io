@@ -1,3 +1,1392 @@
-<div>
-Hello World!
-</div>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <link rel="stylesheet" href="/StyleSheet.css"/>
+<head runat="server">
+    <title></title>
+</head>
+<body style="background:lightgrey">
+    <form id="form1" runat="server">
+
+    <div style="text-align:-webkit-center">
+        <p/>
+        <table>
+            <tr>
+                <th colspan="7" style="font-size:xxx-large">Chess View</th>
+            </tr>
+            <tr>
+                <td style="vertical-align:baseline">
+                    <br /><br />
+                    <table>
+                        <tr>
+                            <th colspan="2">Legend:</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <img id='leg_1' src='/img/light_square.jpg' />
+                            </td>
+                            <td style="max-width: 300px">
+                                Empty square with no one threatening this square.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <img id='leg_2' src='/img/light_square_wc.jpg' />
+                            </td>
+                            <td style="max-width: 300px">
+                                Empty square with only white pieces threatening this square.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <img id='leg_3' src='/img/light_square_bc.jpg' />
+                            </td>
+                            <td style="max-width: 300px">
+                                Empty square with only black pieces threatening this square.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <img id='leg_4' src='/img/light_square_mix.jpg' />
+                            </td>
+                            <td style="max-width: 300px">
+                                Empty square with both white and black pieces threatening this square.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style='position:relative'>
+                                <img id='leg_5' src='/img/light_square.jpg' />
+                                <img id='leg_6' src='img/pawn_b.png' style='position:absolute; left:15px; top:19px;' class="selectedPieceCSS"/>
+                            </td>
+                            <td style="max-width: 300px">
+                                Click on piece to represent picking it up.  Attacks from this piece are not included on the board until it is placed somewhere.  Drag and drop to move the piece.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style='position:relative'>
+                                <img id='leg_7' src='/img/light_square_mix.jpg' />
+                                <img id='leg_8' src='img/pawn_b.png' style='position:absolute; left:15px; top:19px; -webkit-filter: drop-shadow(5px 5px 5px red);'/>
+                                <span style='position:absolute; z-index:1; color:black; top:12px; left: 6px'>1</span>
+                                <span style='position:absolute; z-index:1; color:white; top:12px; right: 6px'>2</span>
+                            </td>
+                            <td style="max-width: 300px">
+                                <b>Ex:</b> Pawn protected once by black and threatened twice by white.  Threat counts shown on occupied squares.  Threat count display is optional on unoccupied squares.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><p></p></td>
+                        </tr>
+                        <tr>
+                            <td><p></p></td>
+                        </tr>
+                        <tr>
+                            <th colspan="2">Directions:</th>
+                        </tr>
+                        <tr>
+                            <td  colspan="2" style="max-width: 300px">
+                                <b>Moving Pieces:</b> Drag and drop, not limited to valid moves.  Move any piece, anywhere.<br /><br />Move onto opposing piece to capture and remove opposing piece from play.<br /><br />Although castling is not shown as a valid move, you can castle by moving the King and the Rook separately.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td  colspan="2" style="max-width: 300px">
+                                <b>Adding/Removing Pieces:</b> Use bins on left or right to remove piece from play, or add piece back into play.  
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="min-width: 50px">
+
+                </td>
+                <td style="vertical-align:baseline">
+                    <br /><br /><br /><br /><br /><br /><br /><br />
+                    <div id="piecesTop" style="text-align:-webkit-center">
+                        <div id="lib_top_div" ondrop='drop(event)' ondragover='allowDrop(event)'></div>
+                    </div>
+                </td>
+                <td>
+                    <div id="board" style="text-align:-webkit-center"></div>
+                    <p/>
+                    <div style="text-align:-webkit-center">
+                        <button onclick="setStartPositions();">Reset Board</button>
+                        <button onclick="setCaptureAll();return false;" type="button">Capture All</button>
+                        <button onclick="flip();return false;">Flip</button>
+                        <!-- <input type="checkbox" id="showAttackValues" onclick="buildBoard(pieceArray)">Show Attack Values instead of Counts</input> -->
+                        <input type="checkbox" id="showAllCounts" onclick="buildBoard(pieceArray)">Show Threat Counts On All Squares</input>
+                    </div>
+                </td>
+                <td style="vertical-align:baseline">
+                    <br /><br /><br /><br /><br /><br /><br /><br />
+                    <div id="piecesBottom" style="text-align:-webkit-center">
+                        <div id="lib_bot_div" ondrop='drop(event)' ondragover='allowDrop(event)'></div>
+                    </div>
+                </td>
+                <td style="min-width: 50px">
+
+                </td>
+                <td style="min-width: 300px">
+                    <table>
+                        <tr><td></td></tr>
+                        <tr><td></td></tr>
+                        <tr><td></td></tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+
+    <script>
+
+        // set starting positions of pieces
+        var boardDir = 1;   // 1 is white at bottom, -1 is white at top
+        var highlightedArray = [];
+        var selectedPieceId;
+        var pieceArray = setStartPositions();
+        document.getElementById("showAllCounts").checked = true;
+        buildBoard(pieceArray);
+        buildPieceLib("top");
+        buildPieceLib("bot");
+        
+        function setStartPositions()
+        {
+            var pieceArray = [];
+
+            // pawns
+            for (f = 1; f <= 8; f++)
+            {
+                var p = { id:'p_w_'+f, type: 'pawn', color: 'w', rank: 2, file: f };
+                pieceArray.push(p);
+            }
+            for (f = 1; f <= 8; f++)
+            {
+                var p = { id:'p_b_'+f, type: 'pawn', color: 'b', rank: 7, file: f };
+                pieceArray.push(p);
+            }
+
+            // rook
+            for (f = 1; f <= 8; f=f+7)
+            {
+                var p = { id:'r_w_'+f, type: 'rook', color: 'w', rank: 1, file: f };
+                pieceArray.push(p);
+            }
+            for (f = 1; f <= 8; f=f+7)
+            {
+                var p = { id:'r_b_'+f, type: 'rook', color: 'b', rank: 8, file: f };
+                pieceArray.push(p);
+            }
+
+            //knight
+            for (f = 2; f <= 7; f=f+5)
+            {
+                var p = { id:'n_w_'+f, type: 'knight', color: 'w', rank: 1, file: f };
+                pieceArray.push(p);
+            }
+            for (f = 2; f <= 7; f=f+5)
+            {
+                var p = { id:'n_b_'+f, type: 'knight', color: 'b', rank: 8, file: f };
+                pieceArray.push(p);
+            }
+
+            // bishop
+            for (f = 3; f <= 6; f=f+3)
+            {
+                var p = { id:'b_w_'+f, type: 'bishop', color: 'w', rank: 1, file: f };
+                pieceArray.push(p);
+            }
+            for (f = 3; f <= 6; f=f+3)
+            {
+                var p = { id:'b_b_'+f, type: 'bishop', color: 'b', rank: 8, file: f };
+                pieceArray.push(p);
+            }
+
+            // queen
+            var p = { id:'q_w_1', type: 'queen', color: 'w', rank: 1, file: 4 };
+            pieceArray.push(p);
+            var p = { id:'q_b_1', type: 'queen', color: 'b', rank: 8, file: 4 };
+            pieceArray.push(p);
+
+            // king
+            var p = { id:'k_w_1', type: 'king', color: 'w', rank: 1, file: 5 };
+            pieceArray.push(p);
+            var p = { id:'k_b_1', type: 'king', color: 'b', rank: 8, file: 5 };
+            pieceArray.push(p);
+            return pieceArray;
+        }
+
+        function setCaptureAll()
+        {
+            // delete all except King's
+
+            // save the king's
+            var kingArray = [];
+            var p;
+            for (p of pieceArray)
+            {
+                if (p.type == "king")
+                {
+                    var temp = Object.assign({},p);
+                    kingArray.push(temp);
+                }
+            }
+
+            // delete all
+            pieceArray = [];
+
+            // put king's back in
+            for (p of kingArray)
+            {
+                pieceArray.push(p);
+            }
+
+            buildBoard(pieceArray);
+        }
+
+        function buildBoard(pieceArray)
+        {
+            // analyze pieces to determine attack squares
+            boardArray=[];
+            for (var r = 8; r >= 1; r--)
+            {
+                for (var f = 1; f <= 8; f++)
+            {
+                    var b = {rank:r,file:f,w:0,b:0,wa:0,ba:0};  // w & b are number of attacks, wa & ba are value of attacks
+                    boardArray.push(b);
+            }
+            }
+            var pc;
+            var wpc=0,bpc=0,wpv=0,bpv=0,wsc=0,bsc=0;
+            for(pc of pieceArray)
+            {
+                if (selectedPieceId == pc.id)
+                {
+                    continue;
+                }
+                switch(pc.type)
+                {
+                    case "pawn":
+                        if (pc.color == 'w')
+                        {
+                            let sq1 = boardArray.find(x1 => x1.rank == pc.rank+boardDir && x1.file == pc.file+1);
+                            if (sq1)
+                            {
+                                sq1.w++;
+                                sq1.wa++;
+                            }
+                            let sq2 = boardArray.find(x2 => x2.rank == pc.rank+boardDir && x2.file == pc.file-1);
+                            if (sq2)
+                            {
+                                sq2.w++;
+                                sq2.wa++;
+                            }
+                        } else {
+                            let sq3 = boardArray.find(x3 => x3.rank == pc.rank-boardDir && x3.file == pc.file+1);
+                            if (sq3)
+                            {
+                                sq3.b++;
+                                sq3.ba++
+                            }
+                            let sq4 = boardArray.find(x4 => x4.rank == pc.rank-boardDir && x4.file == pc.file-1);
+                            if (sq4)
+                            {
+                                sq4.b++;
+                                sq4.ba++;
+                            }
+                        }
+                        break;
+                    case 'rook':
+                        rookColor(pc,boardArray,5);
+                        break;
+                    case 'knight':
+                        for (let ii=1;ii<=8;ii++)
+                        {
+                            let rankStep = (ii % 2 == 0) ? 1 : 2;
+                            let fileStep = (rankStep == 1) ? 2 : 1;
+                            let rankDir = (ii == 1 || ii == 2 || ii == 5 || ii == 6) ? 1 : -1;
+                            let fileDir = (ii >= 1 && ii <= 4) ? 1 : -1;
+                            let sq5 = boardArray.find(x5 => x5.rank == pc.rank + rankDir*rankStep && x5.file == pc.file + fileDir*fileStep);
+                            if (sq5 && pc.color == 'w')
+                            {
+                                sq5.w++;
+                                sq5.wa = sq5.wa+3;
+                            } else if (sq5 && pc.color == 'b')
+                            {
+                                sq5.b++;
+                                sq5.ba=sq5.ba+3;
+                            }
+                        }
+                        break;
+                   case 'bishop':
+                        bishopColor(pc,boardArray,3);
+                        break;
+                   case 'queen':
+                        rookColor(pc,boardArray,9);
+                        bishopColor(pc,boardArray,9);
+                        break;
+                   case 'king':
+                       for (let ii=-1;ii<=1;ii++)
+                       {
+                           for(let jj=-1;jj<=1;jj++)
+                           {
+                               if (ii==0 && jj==00) continue;   // skip king's starting position
+                               let sq6 = boardArray.find(x6 => x6.rank == pc.rank + ii && x6.file == pc.file + jj);
+                               if (sq6 && pc.color == 'w')
+                               {
+                                   sq6.w++;
+                                   sq6.wa++;
+                               } else if (sq6 && pc.color == 'b')
+                               {
+                                   sq6.b++;
+                                   sq6.ba++;
+                               }
+                           }
+                       }
+                       break;
+                }
+            }
+
+            // build board
+            var brdHtml="", f, r, tlb, tlw;
+            var showAllCts = document.getElementById("showAllCounts");
+            brdHtml += "<table style='border-spacing:3px; line-height: 0px'>";
+            brdHtml += "<tr><td colspan='100%'><p/></td></tr>";
+            if (boardDir == 1)
+                brdHtml += "<tr><td></td><td style='text-align:center'>A</td><td style='text-align:center'>B</td><td style='text-align:center'>C</td><td style='text-align:center'>D</td><td style='text-align:center'>E</td><td style='text-align:center'>F</td><td style='text-align:center'>G</td><td style='text-align:center'>H</td><td></td></tr>";
+            else
+                brdHtml += "<tr><td></td><td style='text-align:center'>H</td><td style='text-align:center'>G</td><td style='text-align:center'>F</td><td style='text-align:center'>E</td><td style='text-align:center'>D</td><td style='text-align:center'>C</td><td style='text-align:center'>B</td><td style='text-align:center'>A</td><td></td></tr>";
+            brdHtml += "<tr><td colspan='100%' style='font-size:xx-small'><p/></td></tr>";
+            for (r = 8; r >= 1; r--)
+            {
+                brdHtml += "<tr style='padding:0px'>";
+                if (boardDir == 1)
+                    brdHtml += "<td>" + r +"</td>";
+                else
+                    brdHtml += "<td>" + (9-r) +"</td>";
+                for (f = 1; f <= 8; f++)
+                {
+                    var sqr = boardArray.find(elem=> (elem.rank == r && elem.file == f));
+                    var p = pieceArray.find(elem => (elem.rank == r && elem.file == f));
+                    if (p)
+                    {
+                        switch (p.type)
+                        {
+                            case "pawn":
+                                if (p.color == "w")
+                                {
+                                    wpc++;
+                                    wpv++;
+                                } else {
+                                    bpc++;
+                                    bpv++;
+                                }
+                                break;
+                            case "rook":
+                                if (p.color == "w")
+                                {
+                                    wpc++;
+                                    wpv=wpv+5;
+                                } else {
+                                    bpc++;
+                                    bpv=bpv+5;
+                                }
+                                break;
+                            case "knight":
+                            case "bishop":
+                                if (p.color == "w")
+                                {
+                                    wpc++;
+                                    wpv=wpv+3;
+                                } else {
+                                    bpc++;
+                                    bpv=bpv+3;
+                                }
+                                break;
+                            case "queen":
+                                if (p.color == "w")
+                                {
+                                    wpc++;
+                                    wpv=wpv+9;
+                                } else {
+                                    bpc++;
+                                    bpv=bpv+9;
+                                }
+                                break;
+                            case "king":
+                                if (p.color == "w")
+                                {
+                                    wpc++;
+                                } else {
+                                    bpc++;
+                                }
+                                break;
+                        }
+                    }
+                    tlb = (sqr.b > sqr.w) ? sqr.b-sqr.w + 1 : 1;
+                    tlw = (sqr.w > sqr.b) ? sqr.w-sqr.b + 1 : 1;
+                    // display board square
+                    brdHtml += "<td style='padding:0px; position:relative' ondrop='drop(event)' ondragover='allowDrop(event)'>";
+                    if ((r+f) % 2 == 0)
+                    {
+                        if (sqr.w==0 && sqr.b==0)
+                        {
+                            brdHtml += "<img id=sq_"+ r + "_" + f +" onClick='pieceClick(this);buildBoard(pieceArray);' src='/img/dark_square.jpg';";
+                            if (p && p.color == 'w') wsc++;
+                            if (p && p.color == 'b') bsc++;
+                        } else if (p && sqr.w > 0 && sqr.b == 0 && p.color == 'w')
+                        {
+                            brdHtml += "<img id=sq_"+ r + "_" + f +" onClick='pieceClick(this);buildBoard(pieceArray);' src='/img/dark_square.jpg';";
+                            wsc++;
+                        } else if (p && sqr.w == 0 && sqr.b > 0 && p.color == 'b')
+                        {
+                            brdHtml += "<img id=sq_"+ r + "_" + f +" onClick='pieceClick(this);buildBoard(pieceArray);' src='/img/dark_square.jpg';";
+                            bsc++;
+                        } else if (sqr.w > 0 && sqr.b == 0)
+                        {
+                            brdHtml += "<img id=sq_"+ r + "_" + f +" onClick='pieceClick(this);buildBoard(pieceArray);' src='/img/dark_square_wc.jpg';";
+                            wsc++;
+                        } else if (sqr.w == 0 && sqr.b > 0)
+                        {
+                            brdHtml += "<img id=sq_"+ r + "_" + f +" onClick='pieceClick(this);buildBoard(pieceArray);' src='/img/dark_square_bc.jpg';";
+                            bsc++;
+                        } else {
+                            brdHtml += "<img id=sq_"+ r + "_" + f +" onClick='pieceClick(this);buildBoard(pieceArray);' src='/img/dark_square_mix.jpg';";
+                        }
+                    } else {
+                        if (sqr.w==0 && sqr.b==0)
+                        {
+                            brdHtml += "<img id=sq_"+ r + "_" + f +" onClick='pieceClick(this);buildBoard(pieceArray);' src='/img/light_square.jpg';";
+                            if (p && p.color == 'w') wsc++;
+                            if (p && p.color == 'b') bsc++;
+                        } else if (p && sqr.w > 0 && sqr.b == 0 && p.color == 'w')
+                        {
+                            brdHtml += "<img id=sq_"+ r + "_" + f +" onClick='pieceClick(this);buildBoard(pieceArray);' src='/img/light_square.jpg';";
+                            wsc++;
+                        } else if (p && sqr.w == 0 && sqr.b > 0 && p.color == 'b')
+                        {
+                            brdHtml += "<img id=sq_"+ r + "_" + f +" onClick='pieceClick(this);buildBoard(pieceArray);' src='/img/light_square.jpg';";
+                            bsc++;
+                        }
+                        else if (sqr.w > 0 && sqr.b == 0)
+                        {
+                            brdHtml += "<img id=sq_"+ r + "_" + f +" onClick='pieceClick(this);buildBoard(pieceArray);' src='/img/light_square_wc.jpg';";
+                            wsc++;
+                        } else if (sqr.w == 0 && sqr.b > 0)
+                        {
+                            brdHtml += "<img id=sq_"+ r + "_" + f +" onClick='pieceClick(this);buildBoard(pieceArray);' src='/img/light_square_bc.jpg';";
+                            bsc++;
+                        } else {
+                            brdHtml += "<img id=sq_"+ r + "_" + f +" onClick='pieceClick(this);buildBoard(pieceArray);' src='/img/light_square_mix.jpg';";
+                        }
+                    }
+                    var highlightSqr = highlightedArray.find(x => x.rank == r && x.file == f);
+                    if (highlightSqr) brdHtml += " style='opacity:0.65'";
+                    if (highlightSqr) brdHtml += " class='circle'";
+                    brdHtml += ">";
+                    
+                    // display counts of attacks on a square
+                    if (showAllCts.checked || p)
+                    {
+                        brdHtml += (sqr.w > 0) ? "<span style='position:absolute; z-index:1; color:white; top:12px; right: 6px'>" + sqr.w + "</span>" : "";
+                        brdHtml += (sqr.b > 0) ? "<span style='position:absolute; z-index:1; color:black; top:12px; left: 6px'>" + sqr.b + "</span>" : "";
+                    }
+
+                    // display the pieces
+                    if (p)
+                    {
+                        switch(p.type)
+                        {
+                            case 'pawn':
+                                if (p.color == 'w')
+                                {
+                                    brdHtml += "<img id=" + p.id + " src='img/pawn_w.png' draggable='true' ondragstart='drag(event)' onClick='pieceClick(this);buildBoard(pieceArray);' style='position:absolute; left:15px; top:19px;";
+                                    if (sqr.b > 0) brdHtml += threatenedStyle(p.id,tlb);
+                                } else {
+                                    brdHtml += "<img id=" + p.id + " src='img/pawn_b.png' draggable='true' ondragstart='drag(event)' onClick='pieceClick(this);buildBoard(pieceArray);' style='position:absolute; left:15px; top:19px;";
+                                    if (sqr.w > 0) brdHtml += threatenedStyle(p.id,tlw);
+                                }
+                                break;
+                            case 'rook':
+                                if (p.color == 'w')
+                                {
+                                    brdHtml += "<img id=" + p.id + " src='img/rook_w.png' draggable='true' ondragstart='drag(event)' onClick='pieceClick(this);buildBoard(pieceArray);' style='position:absolute; left:15px; top:10px;"
+                                    if (sqr.b > 0) brdHtml += threatenedStyle(p.id,tlb);
+                                } else {
+                                    brdHtml += "<img id=" + p.id + " src='img/rook_b.png' draggable='true' ondragstart='drag(event)' onClick='pieceClick(this);buildBoard(pieceArray);' style='position:absolute; left:15px; top:10px;";
+                                    if (sqr.w > 0) brdHtml += threatenedStyle(p.id,tlw);
+                                }
+                                break;
+                            case 'knight':
+                                if (p.color == 'w')
+                                {
+                                    brdHtml += "<img id=" + p.id + " src='img/knight_w.png' draggable='true' ondragstart='drag(event)' onClick='pieceClick(this);buildBoard(pieceArray);' style='position:absolute; left:25px; top:10px;";
+                                    if (sqr.b > 0) brdHtml += threatenedStyle(p.id,tlb);
+                                } else {
+                                    brdHtml += "<img id=" + p.id + " src='img/knight_b.png' draggable='true' ondragstart='drag(event)' onClick='pieceClick(this);buildBoard(pieceArray);' style='position:absolute; left:25px; top:10px;";
+                                    if (sqr.w > 0) brdHtml += threatenedStyle(p.id,tlw);
+                                }
+                                break;
+                            case 'bishop':
+                                if (p.color == 'w')
+                                {
+                                    brdHtml += "<img id=" + p.id + " src='img/bishop_w.png' draggable='true' ondragstart='drag(event)' onClick='pieceClick(this);buildBoard(pieceArray);' style='position:absolute; left:20px; top:12px;";
+                                    if (sqr.b > 0) brdHtml += threatenedStyle(p.id,tlb);
+                                } else {
+                                    brdHtml += "<img id=" + p.id + " src='img/bishop_b.png' draggable='true' ondragstart='drag(event)' onClick='pieceClick(this);buildBoard(pieceArray);' style='position:absolute; left:20px; top:12px;";
+                                    if (sqr.w > 0) brdHtml += threatenedStyle(p.id,tlw);
+                                }
+                                break;
+                            case 'queen':
+                                if (p.color == 'w')
+                                {
+                                    brdHtml += "<img id=" + p.id + " src='img/queen_w.png' draggable='true' ondragstart='drag(event)' onClick='pieceClick(this);buildBoard(pieceArray);' style='position:absolute; left:8px; top:18px;";
+                                    if (sqr.b > 0) brdHtml += threatenedStyle(p.id,tlb);
+                                } else {
+                                    brdHtml += "<img id=" + p.id + " src='img/queen_b.png' draggable='true' ondragstart='drag(event)' onClick='pieceClick(this);buildBoard(pieceArray);' style='position:absolute; left:8px; top:18px;";
+                                    if (sqr.w > 0) brdHtml += threatenedStyle(p.id,tlw);
+                                }
+                                break;
+                            case 'king':
+                                if (p.color == 'w')
+                                {
+                                    brdHtml += "<img id=" + p.id + " src='img/king_w.png' draggable='true' ondragstart='drag(event)' onClick='pieceClick(this);buildBoard(pieceArray);' style='position:absolute; left:15px; top:10px;";
+                                    if (sqr.b > 0) brdHtml += threatenedStyle(p.id,tlb);
+                                } else {
+                                    brdHtml += "<img id=" + p.id + " src='img/king_b.png' draggable='true' ondragstart='drag(event)' onClick='pieceClick(this);buildBoard(pieceArray);' style='position:absolute; left:15px; top:10px;";
+                                    if (sqr.w > 0) brdHtml += threatenedStyle(p.id,tlw);
+                                    
+                                }
+
+                                break;
+                            default:
+                        }
+                        if (selectedPieceId == p.id)
+                        {
+                            brdHtml += "' class='selectedPieceCSS";
+                        }
+                        brdHtml += "' />";
+                    }
+
+                    brdHtml += "</td>";
+                }
+                if (boardDir == 1)
+                    brdHtml += "<td>" + r +"</td>";
+                else
+                    brdHtml += "<td>" + (9-r) +"</td>";
+                brdHtml += "</tr>";
+            }
+            brdHtml += "<tr><td colspan='100%' style='font-size:xx-small'><p/></td></tr>";
+            if (boardDir == 1)
+            {
+                brdHtml += "<tr><td></td><td style='text-align:center'>A</td><td style='text-align:center'>B</td><td style='text-align:center'>C</td><td style='text-align:center'>D</td><td style='text-align:center'>E</td><td style='text-align:center'>F</td><td style='text-align:center'>G</td><td style='text-align:center'>H</td><td></td></tr>";
+                brdHtml += "<tr><td colspan='100%'><p/></td></tr>";
+                brdHtml += "<tr><td></td><td colspan='2' style='text-align:center'>Black Piece Count:<p/>" + bpc + "</td><td colspan='2' style='text-align:center'>Black Piece Value:<p/>" + bpv + "</td><td colspan='2' style='text-align:center'>White Piece Count:<p/>" + wpc + "</td><td colspan='2' style='text-align:center'>White Piece Value:<p/>" + wpv + "</td><td></td></tr>";
+                brdHtml += "<tr><td colspan='100%'><p/></td></tr>";
+                brdHtml += "<tr><td></td><td colspan='4' style='text-align:center'>Black controlled squares:<p/>" + bsc + "</td><td colspan='4' style='text-align:center'>White controlled squares:<p/>" + wsc + "</td><td></td></tr>";
+            } else {
+                brdHtml += "<tr><td></td><td style='text-align:center'>H</td><td style='text-align:center'>G</td><td style='text-align:center'>F</td><td style='text-align:center'>E</td><td style='text-align:center'>D</td><td style='text-align:center'>C</td><td style='text-align:center'>B</td><td style='text-align:center'>A</td><td></td></tr>";
+                brdHtml += "<tr><td colspan='100%'><p/></td></tr>";
+                brdHtml += "<tr><td></td><td colspan='2' style='text-align:center'>White Piece Count:<p/>" + wpc + "</td><td colspan='2' style='text-align:center'>White Piece Value:<p/>" + wpv + "</td><td colspan='2' style='text-align:center'>Black Piece Count:<p/>" + bpc + "</td><td colspan='2' style='text-align:center'>Black Piece Value:<p/>" + bpv + "</td><td></td></tr>";
+                brdHtml += "<tr><td colspan='100%'><p/></td></tr>";
+                brdHtml += "<tr><td></td><td colspan='4' style='text-align:center'>White controlled squares:<p/>" + wsc + "</td><td colspan='4' style='text-align:center'>Black controlled squares:<p/>" + bsc + "</td><td></td></tr>";
+            }
+            brdHtml += "</table>";
+
+            document.getElementById("board").innerHTML = brdHtml;
+        }
+
+        function threatenedStyle(pid, threat)
+        {
+            if (pid == selectedPieceId)
+            {
+                return;
+            }
+            var glow = 2+threat;
+            let returnStr = " -webkit-filter: drop-shadow(" + glow + "px " + glow + "px " + glow + "px red);";
+            return returnStr;
+        }
+
+        function buildPieceLib(loc)
+        {
+            var lib = "";
+            var color = ((boardDir == 1 && loc == "bot") || (boardDir == -1 && loc == "top")) ? "w" : "b";
+
+            lib += "<table id='lib_" + loc + "_table' ondrop='drop(event)' ondragover='allowDrop(event)'>";
+            lib += "<tr id='lib_" + loc + "_row' >";
+            lib += "<td id='lib_" + loc + "_td1' style='padding:0px; position:relative'>";
+            lib += "<img id='lib_" + loc + "_img1' src='/img/square_empty.png'></img>";
+            lib += "<img id='lib_" + loc + "_queen' src='img/queen_" + color + ".png' draggable='true' ondragstart='drag(event)' style='position:absolute; left:8px; top:18px'></img>";
+            lib += "</td></tr>";
+            lib += "<tr><td id='lib_" + loc + "_td2' style='padding:0px; position:relative'>";
+            lib += "<img id='lib_" + loc + "_img2' src='/img/square_empty.png'></img>";
+            lib += "<img id='lib_" + loc + "_rook' src='img/rook_" + color + ".png' draggable='true' ondragstart='drag(event)' style='position:absolute; left:15px; top:10px'></img>";
+            lib += "</td></tr>";
+            lib += "<tr><td id='lib_" + loc + "_td3' style='padding:0px; position:relative'>";
+            lib += "<img id='lib_" + loc + "_img3' src='/img/square_empty.png'></img>";
+            lib += "<img id='lib_" + loc + "_bishop' src='img/bishop_" + color + ".png' draggable='true' ondragstart='drag(event)' style='position:absolute; left:20px; top:12px'></img>";
+            lib += "</td></tr>";
+            lib += "<tr><td id='lib_" + loc + "_td4' style='padding:0px; position:relative'>";
+            lib += "<img id='lib_" + loc + "_img4' src='/img/square_empty.png'></img>";
+            lib += "<img id='lib_" + loc + "_knight' src='img/knight_" + color + ".png' draggable='true' ondragstart='drag(event)' style='position:absolute; left:25px; top:10px'></img>";
+            lib += "</td></tr>";
+            lib += "<tr><td id='lib_" + loc + "_td5' style='padding:0px; position:relative'>";
+            lib += "<img id='lib_" + loc + "_img5' src='/img/square_empty.png'></img>";
+            lib += "<img id='lib_" + loc + "_pawn' src='img/pawn_" + color + ".png' draggable='true' ondragstart='drag(event)' style='position:absolute; left:15px; top:19px'></img>";
+            lib += "</td>";
+            lib += "</tr>";
+            lib += "</table>";
+            document.getElementById("lib_" + loc + "_div").innerHTML = lib;
+
+        }
+
+        function rookColor(p, boardArray, attackVal)
+        {
+            // calculate square count for rook attack
+            var rank = p.rank;
+            var file = p.file;
+            console.log("checking rook rank dir 1");
+            for (var ii=rank+1;ii<=8;ii++)
+            {
+                var sq = boardArray.find(elem=> (elem.rank == ii && elem.file == file));
+                console.log(ii);
+                console.log(file);
+                if (p.color == 'w')
+                {
+                    sq.w=sq.w+1;
+                    sq.wa=sq.wa+attackVal;
+                }
+                else if (p.color == 'b')
+                {
+                    sq.b=sq.b+1;
+                    sq.ba=sq.ba+attackVal;
+                }
+                var existPiece = pieceArray.find(elem=> elem.rank == ii && elem.file == file);
+                if (existPiece)
+                {
+                    if (!selectedPieceId)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        if (selectedPieceId.length > 0 && selectedPieceId == existPiece.id)
+                        {
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+            for (var ii=rank-1;ii>=1;ii--)
+            {
+                var sq = boardArray.find(elem=> (elem.rank == ii && elem.file == file));
+                if (p.color == 'w')
+                {
+                    sq.w=sq.w+1;
+                    sq.wa=sq.wa+attackVal;
+                }
+                else if (p.color == 'b')
+                {
+                    sq.b=sq.b+1;
+                    sq.ba=sq.ba+attackVal;
+                }
+                var existPiece = pieceArray.find(elem=> elem.rank == ii && elem.file == file);
+                if (existPiece)
+                {
+                    if (!selectedPieceId)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        if (selectedPieceId.length > 0 && selectedPieceId == existPiece.id)
+                        {
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+            for (var ii=file+1;ii<=8;ii++)
+            {
+                var sq = boardArray.find(elem=> (elem.rank == rank && elem.file == ii));
+                if (p.color == 'w')
+                {
+                    sq.w=sq.w+1;
+                    sq.wa=sq.wa+attackVal;
+                }
+                else if (p.color == 'b')
+                {
+                    sq.b=sq.b+1;
+                    sq.ba=sq.ba+attackVal;
+                }
+                var existPiece = pieceArray.find(elem=> elem.rank == rank && elem.file == ii);
+                if (existPiece)
+                {
+                    if (!selectedPieceId)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        if (selectedPieceId.length > 0 && selectedPieceId == existPiece.id)
+                        {
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+            for (var ii=file-1;ii>=1;ii--)
+            {
+                var sq = boardArray.find(elem=> (elem.rank == rank && elem.file == ii));
+                if (p.color == 'w')
+                {
+                    sq.w=sq.w+1;
+                    sq.wa=sq.wa+attackVal;
+                }
+                else if (p.color == 'b')
+                {
+                    sq.b=sq.b+1;
+                    sq.ba=sq.ba+attackVal;
+                }
+                var existPiece = pieceArray.find(elem=> elem.rank == rank && elem.file == ii);
+                if (existPiece)
+                {
+                    if (!selectedPieceId)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        if (selectedPieceId.length > 0 && selectedPieceId == existPiece.id)
+                        {
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        function bishopColor(p, boardArray, attackVal)
+        {
+            // calculate bishop count for rook attack
+            var startRank = p.rank;
+            var startFile = p.file;
+            for (var ii=1;ii<=8;ii++)
+            {
+                var sq = boardArray.find(elem=> (elem.rank == startRank+ii && elem.file == startFile+ii));
+                if (sq)
+                {
+                    if (p.color == 'w')
+                    {
+                        sq.w=sq.w+1;
+                        sq.wa=sq.wa+attackVal;
+                    }
+                    else if (p.color == 'b')
+                    {
+                        sq.b=sq.b+1;
+                        sq.ba=sq.ba+attackVal;
+                    }
+                    var existPiece = pieceArray.find(elem=> elem.rank == startRank+ii && elem.file == startFile+ii);
+                    if (existPiece)
+                    {
+                        if (!selectedPieceId)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            if (selectedPieceId.length > 0 && selectedPieceId == existPiece.id)
+                            {
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    break;
+                }
+            }
+            for (var ii=1;ii<=8;ii++)
+            {
+                var sq = boardArray.find(elem=> (elem.rank == startRank+ii && elem.file == startFile-ii));
+                if (sq)
+                {
+                    if (p.color == 'w')
+                    {
+                        sq.w=sq.w+1;
+                        sq.wa=sq.wa+attackVal;
+                    }
+                    else if (p.color == 'b')
+                    {
+                        sq.b=sq.b+1;
+                        sq.ba=sq.ba+attackVal;
+                    }
+                    var existPiece = pieceArray.find(elem=> elem.rank == startRank+ii && elem.file == startFile-ii);
+                    if (existPiece)
+                    {
+                        if (!selectedPieceId)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            if (selectedPieceId.length > 0 && selectedPieceId == existPiece.id)
+                            {
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    break;
+                }
+            }
+            for (var ii=1;ii<=8;ii++)
+            {
+                var sq = boardArray.find(elem=> (elem.rank == startRank-ii && elem.file == startFile+ii));
+                if (sq)
+                {
+                    if (p.color == 'w')
+                    {
+                        sq.w=sq.w+1;
+                        sq.wa=sq.wa+attackVal;
+                    }
+                    else if (p.color == 'b')
+                    {
+                        sq.b=sq.b+1;
+                        sq.ba=sq.ba+attackVal;
+                    }
+                    var existPiece = pieceArray.find(elem=> elem.rank == startRank-ii && elem.file == startFile+ii);
+                    if (existPiece)
+                    {
+                        if (!selectedPieceId)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            if (selectedPieceId.length > 0 && selectedPieceId == existPiece.id)
+                            {
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    break;
+                }
+            }
+            for (var ii=1;ii<=8;ii++)
+            {
+                var sq = boardArray.find(elem=> (elem.rank == startRank-ii && elem.file == startFile-ii));
+                if (sq)
+                {
+                    if (p.color == 'w')
+                    {
+                        sq.w=sq.w+1;
+                        sq.wa=sq.wa+attackVal;
+                    }
+                    else if (p.color == 'b')
+                    {
+                        sq.b=sq.b+1;
+                        sq.ba=sq.ba+attackVal;
+                    }
+                    var existPiece = pieceArray.find(elem=> elem.rank == startRank-ii && elem.file == startFile-ii);
+                    if (existPiece)
+                    {
+                        if (!selectedPieceId)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            if (selectedPieceId.length > 0 && selectedPieceId == existPiece.id)
+                            {
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function pieceClick(pieceImg)
+        {
+            highlightedArray = [];
+            highlightedSquares = [];
+            var movedPiece = pieceArray.find(elem => elem.id == pieceImg.id);
+            console.log(selectedPieceId);
+            console.log(pieceImg.id);
+            var imgElem = document.getElementById(pieceImg.id);
+            if (movedPiece && selectedPieceId == pieceImg.id)
+            {
+                // previously selected, so unselect
+                selectedPieceId = "";
+                movedPiece = pieceArray.find(elem => elem.id == "");
+
+            } else if (movedPiece)
+            {
+                selectedPieceId = pieceImg.id;
+            }
+
+            previewMove(movedPiece,'click',highlightedSquares);
+            buildBoard(pieceArray);
+        }
+
+        function drag(ev)
+        {
+            selectedPieceId = "";
+            highlightedSquares = [];
+            highlightedArray = [];
+            ev.dataTransfer.setData("text", ev.target.id);
+            var data = ev.dataTransfer.getData("text");
+            var movedPiece = pieceArray.find(elem => elem.id == data);
+            if (movedPiece)
+            {
+                selectedPieceId = movedPiece.id;
+            }
+            previewMove(movedPiece,'drag',highlightedSquares);
+        }
+
+        function previewMove(movedPiece,action,highlightedSquares) {
+
+            // change opacity of valid move squares
+            if (movedPiece)
+            {
+                switch(movedPiece.type)
+                {
+                    case 'pawn':
+                        var moveDir = (movedPiece.color == 'w') ? boardDir : boardDir*-1;
+                        var startRank = (movedPiece.color == 'w') ? 2 : 7;
+                        if (boardDir == -1) 
+                        {
+                            if (startRank == 2)
+                            {
+                                startRank = 7;
+                            } else {
+                                startRank = 2;
+                            }
+                        }
+
+                        // check space in front is open
+                        var destPiece = pieceArray.find(x => x.rank == movedPiece.rank+moveDir && x.file == movedPiece.file);
+                         if (!destPiece)
+                        {
+                            var highlightSqr = {rank: movedPiece.rank+moveDir, file:movedPiece.file};
+                            highlightedSquares.push(highlightSqr);
+                            // are we on starting rank?
+                            if (movedPiece.rank == startRank)
+                            {
+                                // is second space open?
+                                var destPiece2 = pieceArray.find(x => x.rank == movedPiece.rank+2*moveDir && x.file == movedPiece.file);
+                                if (!destPiece2)
+                                {
+                                    var highlightSqr = {rank: movedPiece.rank+2*moveDir, file:movedPiece.file};
+                                    highlightedSquares.push(highlightSqr);
+                                }
+                            }
+                        }
+                        // check if attack spaces exist
+                        var destPiece2 = pieceArray.find(x => x.rank == movedPiece.rank+moveDir && x.file == movedPiece.file+1);
+                        if (destPiece2)
+                        {
+                            if (destPiece2.color != movedPiece.color)
+                            {
+                                var highlightSqr = {rank: movedPiece.rank+moveDir, file:movedPiece.file+1};
+                                highlightedSquares.push(highlightSqr);
+                            }
+                        }
+                        var destPiece3 = pieceArray.find(x => x.rank == movedPiece.rank+moveDir && x.file == movedPiece.file-1);
+                        if (destPiece3)
+                        {
+                            if (destPiece3.color != movedPiece.color)
+                            {
+                                var highlightSqr = {rank: movedPiece.rank+moveDir, file:movedPiece.file-1};
+                                highlightedSquares.push(highlightSqr);
+                            }
+                        }
+                        // todo: capture en passe
+                        break;
+                    case 'rook':
+                        // move onto empty square or capture opposing piece
+                        highlightedSquares = highlightRook(movedPiece,highlightedSquares);
+                        break;
+                    case 'knight':
+                        // move onto empty square or capture opposing piece
+                        for (var ii=1;ii<=8;ii++)
+                        {
+                            var rankStep = (ii % 2 == 0) ? 1 : 2;
+                            var fileStep = (rankStep == 1) ? 2 : 1;
+                            var rankDir = (ii == 1 || ii == 2 || ii == 5 || ii == 6) ? 1 : -1;
+                            var fileDir = (ii >= 1 && ii <= 4) ? 1 : -1;
+                            var sq = boardArray.find(elem=> (elem.rank == movedPiece.rank + rankDir*rankStep && elem.file == movedPiece.file + fileDir*fileStep));
+                            var destPiece = pieceArray.find(x => x.rank == movedPiece.rank + rankDir*rankStep && x.file == movedPiece.file + fileDir*fileStep);
+                            if (sq && (!destPiece || destPiece.color != movedPiece.color))
+                            {
+                                var highlightSqr = {rank: movedPiece.rank + rankDir*rankStep, file:movedPiece.file + fileDir*fileStep};
+                                highlightedSquares.push(highlightSqr);
+                            }
+                        }
+                        break;
+                    case 'bishop':
+                        // move onto empty square or capture opposing piece
+                        highlightedSquares = highlightBishop(movedPiece,highlightedSquares);
+                        break;
+                    case 'queen':
+                        // move onto empty square or capture opposing piece
+                        highlightedSquares = highlightRook(movedPiece,highlightedSquares);
+                        highlightedSquares = highlightBishop(movedPiece,highlightedSquares);
+                        break;
+                    case 'king':
+                        // move onto empty square or capture opposing piece
+                        for (var ii=-1;ii<=1;ii++)
+                        {
+                            for (var jj=-1;jj<=1;jj++)
+                            {
+                                if (ii==0 && jj==0) continue;
+                                var sq = boardArray.find(elem=> (elem.rank == movedPiece.rank + ii && elem.file == movedPiece.file + jj));
+                                if (sq)
+                                {
+                                    var destPiece = pieceArray.find(x => x.rank == movedPiece.rank + ii && x.file == movedPiece.file + jj);
+                                    if (sq && (!destPiece || destPiece.color != movedPiece.color))
+                                    {
+                                        var highlightSqr = {rank: movedPiece.rank + ii, file:movedPiece.file + jj};
+                                        highlightedSquares.push(highlightSqr);
+                                    }
+                                }
+                            }
+                        }
+                        //todo: castling
+                        break;
+                }
+            }
+
+            if (action == "drag")
+            {
+                // this works in drag to change opacity of drawn elements
+                for(var sqr of highlightedSquares)
+                {
+                    var sqrElem = document.getElementById("sq_"+ sqr.rank + "_" + sqr.file);
+                    sqrElem.style.opacity = "0.65";
+                }
+            } else {
+                // need to pass to aray for redraw on click
+                for(var sqr of highlightedSquares)
+                {
+                    var sqrElem = document.getElementById("sq_"+ sqr.rank + "_" + sqr.file);
+                    sqrElem.style.opacity = "0.65";
+                    highlightedArray.push(sqr);
+                }
+            }
+        }
+
+        function highlightRook(movedPiece, highlightedSquares)
+        {
+            // move onto empty square or capture opposing piece
+            for (var ii=movedPiece.rank+1;ii<=8;ii++)
+            {
+                var destPiece = pieceArray.find(x => x.rank == ii && x.file == movedPiece.file);
+                if (!destPiece)
+                {
+                    var highlightSqr = {rank: ii, file:movedPiece.file};
+                    highlightedSquares.push(highlightSqr);
+                } else {
+                    if (destPiece.color != movedPiece.color)
+                    {
+                        var highlightSqr = {rank: ii, file:movedPiece.file};
+                        highlightedSquares.push(highlightSqr);
+                    }
+                    break;
+                }
+            }
+            for (var ii=movedPiece.rank-1;ii>=1;ii--)
+            {
+                var destPiece = pieceArray.find(x => x.rank == ii && x.file == movedPiece.file);
+                if (!destPiece)
+                {
+                    var highlightSqr = {rank: ii, file:movedPiece.file};
+                    highlightedSquares.push(highlightSqr);
+                } else {
+                    if (destPiece.color != movedPiece.color)
+                    {
+                        var highlightSqr = {rank: ii, file:movedPiece.file};
+                        highlightedSquares.push(highlightSqr);
+                    }
+                    break;
+                }
+            }
+            for (var ii=movedPiece.file+1;ii<=8;ii++)
+            {
+                var destPiece = pieceArray.find(x => x.rank == movedPiece.rank && x.file == ii);
+                if (!destPiece)
+                {
+                    var highlightSqr = {rank: movedPiece.rank, file:ii};
+                    highlightedSquares.push(highlightSqr);
+                } else {
+                    if (destPiece.color != movedPiece.color)
+                    {
+                        var highlightSqr = {rank: movedPiece.rank, file:ii};
+                        highlightedSquares.push(highlightSqr);
+                    }
+                    break;
+                }
+            }
+            for (var ii=movedPiece.file-1;ii>=1;ii--)
+            {
+                var destPiece = pieceArray.find(x => x.rank == movedPiece.rank && x.file == ii);
+                if (!destPiece)
+                {
+                    var highlightSqr = {rank: movedPiece.rank, file:ii};
+                    highlightedSquares.push(highlightSqr);
+                } else {
+                    if (destPiece.color != movedPiece.color)
+                    {
+                        var highlightSqr = {rank: movedPiece.rank, file:ii};
+                        highlightedSquares.push(highlightSqr);
+                    }
+                    break;
+                }
+            }
+            return highlightedSquares;
+        }
+
+        function highlightBishop(movedPiece, highlightedSquares)
+        {
+            // move onto empty square or capture opposing piece
+            for (var ii=1;ii<=8;ii++)
+            {
+                var sq = boardArray.find(elem=> (elem.rank == movedPiece.rank + ii && elem.file == movedPiece.file + ii));
+                if (sq)
+                {
+                    var destPiece = pieceArray.find(x => x.rank == movedPiece.rank + ii && x.file == movedPiece.file + ii);
+                    if (!destPiece)
+                    {
+                        var highlightSqr = {rank: movedPiece.rank + ii, file:movedPiece.file + ii};
+                        highlightedSquares.push(highlightSqr);
+                    } else {
+                        if (movedPiece.color != destPiece.color)
+                        {
+                            var highlightSqr = {rank: movedPiece.rank + ii, file:movedPiece.file + ii};
+                            highlightedSquares.push(highlightSqr);
+                        }
+                        break;
+                    }
+                }
+            }
+            for (var ii=1;ii<=8;ii++)
+            {
+                var sq = boardArray.find(elem=> (elem.rank == movedPiece.rank - ii && elem.file == movedPiece.file - ii));
+                if (sq)
+                {
+                    var destPiece = pieceArray.find(x => x.rank == movedPiece.rank - ii && x.file == movedPiece.file - ii);
+                    if (!destPiece)
+                    {
+                        var highlightSqr = {rank: movedPiece.rank - ii, file:movedPiece.file - ii};
+                        highlightedSquares.push(highlightSqr);
+                    } else {
+                        if (movedPiece.color != destPiece.color)
+                        {
+                            var highlightSqr = {rank: movedPiece.rank - ii, file:movedPiece.file - ii};
+                            highlightedSquares.push(highlightSqr);
+                        }
+                        break;
+                    }
+                }
+            }
+            for (var ii=1;ii<=8;ii++)
+            {
+                var sq = boardArray.find(elem=> (elem.rank == movedPiece.rank + ii && elem.file == movedPiece.file - ii));
+                if (sq)
+                {
+                    var destPiece = pieceArray.find(x => x.rank == movedPiece.rank + ii && x.file == movedPiece.file - ii);
+                    if (!destPiece)
+                    {
+                        var highlightSqr = {rank: movedPiece.rank + ii, file:movedPiece.file - ii};
+                        highlightedSquares.push(highlightSqr);
+                    } else {
+                        if (movedPiece.color != destPiece.color)
+                        {
+                            var highlightSqr = {rank: movedPiece.rank + ii, file:movedPiece.file - ii};
+                            highlightedSquares.push(highlightSqr);
+                        }
+                        break;
+                    }
+                }
+            }
+            for (var ii=1;ii<=8;ii++)
+            {
+                var sq = boardArray.find(elem=> (elem.rank == movedPiece.rank - ii && elem.file == movedPiece.file + ii));
+                if (sq)
+                {
+                    var destPiece = pieceArray.find(x => x.rank == movedPiece.rank - ii && x.file == movedPiece.file + ii);
+                    if (!destPiece)
+                    {
+                        var highlightSqr = {rank: movedPiece.rank - ii, file:movedPiece.file + ii};
+                        highlightedSquares.push(highlightSqr);
+                    } else {
+                        if (movedPiece.color != destPiece.color)
+                        {
+                            var highlightSqr = {rank: movedPiece.rank - ii, file:movedPiece.file + ii};
+                            highlightedSquares.push(highlightSqr);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            return highlightedSquares;
+        }
+
+        function drop(ev)
+        {
+            ev.preventDefault();
+            selectedPieceId = "";
+            var data = ev.dataTransfer.getData("text");
+            var movedPiece = pieceArray.find(elem => elem.id == data);
+            if (!movedPiece)
+            {
+                // new piece selected from library
+                var idArray = data.split("_");  // format of lib, bot/top, piece type
+                if (idArray.length == 0 || idArray[0] != "lib")
+                {
+                    // didn't drop from library
+                    return;
+                }
+                var color = ((boardDir == 1 && idArray[1] == "bot") || (boardDir == -1 && idArray[1] == "top")) ? 'w' : 'b';
+                var pieceInitial;
+                switch (idArray[2])
+                {
+                    case 'pawn':
+                        pieceInitial='p';
+                        break;
+                    case 'rook':
+                        pieceInitial='r';
+                        break;
+                    case 'knight':
+                        pieceInitial='n';
+                        break;
+                    case 'bishop':
+                        pieceInitial='b';
+                        break;
+                    case 'queen':
+                        pieceInitial='q';
+                        break;
+                    case 'king':
+                        pieceInitial='k';
+                        break;
+                }
+                var elementArray = document.querySelectorAll("[id*=" + pieceInitial + "_" + color + "_]");
+                movedPiece = { id: pieceInitial + "_" + color + "__"+elementArray.length ,type: idArray[2], color: color, rank: 0, file: 0 };
+                pieceArray.push(movedPiece);
+            }
+            var trgtId = ev.target.id;
+            var targetIdArry = trgtId.split("_");
+            if (targetIdArry[0] == "lib")
+            {
+                // dropped piece on library, so delete it
+                var foundIndex = -1;
+                var p;
+                var indx=0;
+                //console.log(pieceArray);
+                for (p of pieceArray)
+                {
+                    if (p.id == data)
+                    {
+                            foundIndex = indx;
+                            break;
+                    }
+                    indx++;
+                }
+                if (foundIndex >= 0)
+                {
+                    // remove captured piece
+                    pieceArray.splice(foundIndex,1);
+                }
+                buildBoard(pieceArray);
+                return;
+            }
+            var targetPiece = pieceArray.find(elem => elem.id == trgtId);   // moved onto another piece
+            var targetSquareArray = [];
+            if (targetPiece)
+            {
+                if (targetPiece.rank >= 1 && targetPiece.rank <= 8 && targetPiece.file >= 1 && targetPiece.file <= 8)
+                {
+                    targetSquareArray[0] = "sq";
+                    targetSquareArray[1] = targetPiece.rank;
+                    targetSquareArray[2] = targetPiece.file;
+                }
+            } else {
+                targetSquareArray = trgtId.split("_");
+            }
+            if (targetSquareArray[0]=="sq" && targetSquareArray[1] >= 1 && targetSquareArray[1] <= 8 && targetSquareArray[2] >= 1 && targetSquareArray[2] <= 8)
+            {
+                // dropped on board
+                var existingPiece = pieceArray.find(elem => (elem.rank == targetSquareArray[1] && elem.file == targetSquareArray[2]));
+                if (!existingPiece)
+                {
+                    // no existing piece, so move
+                    movedPiece.rank = parseInt(targetSquareArray[1]);
+                    movedPiece.file = parseInt(targetSquareArray[2]);
+                } else if (existingPiece.color == movedPiece.color) {
+                    // moved onto own piece, so do nothing
+                } else if (existingPiece.color != movedPiece.color)
+                {
+                    // captured piece, so move piece and remove captured piece from board
+                    movedPiece.rank = parseInt(targetSquareArray[1]);
+                    movedPiece.file = parseInt(targetSquareArray[2]);
+                    var foundIndex = -1;
+                    var p;
+                    var indx=0;
+                    for (p of pieceArray)
+                    {
+                        if (p.id == existingPiece.id)
+                        {
+                            foundIndex = indx;
+                            break;
+                        }
+                        indx++;
+                    }
+                    if (foundIndex >= 0)
+                    {
+                        // remove captured piece
+                        pieceArray.splice(foundIndex,1);
+                    }
+                }
+            }
+            
+            buildBoard(pieceArray);
+        }
+
+        function flip()
+        {
+            //flips board
+            boardDir = boardDir*-1.0;
+            for (var p of pieceArray)
+            {
+                if (p.rank > 0)
+                {
+                    p.rank = 9-p.rank;
+                }
+                if (p.file > 0)
+                {
+                    p.file = 9-p.file;
+                }
+            }
+            buildBoard(pieceArray);
+            buildPieceLib("top");
+            buildPieceLib("bot");
+        }
+    </script>
+
+    </form>
+</body>
+</html>
