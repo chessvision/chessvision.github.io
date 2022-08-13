@@ -1,3 +1,6 @@
+[![Open in Visual Studio Code](https://img.shields.io/badge/Open%20in-Visal%20Studio%20Code-blue?style=for-the-badge&logo=visualstudiocode)](https://open.vscode.dev/chessvision/chessvision.github.io)
+
+
 ## Welcome to GitHub Pages
 
 You can use the [editor on GitHub](https://github.com/Security-Zen/Security-Zen.github.io/edit/main/README.md) to maintain and preview the content for your website in Markdown files.
