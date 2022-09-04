@@ -648,12 +648,9 @@ title: Chess Vision
             // calculate square count for rook attack
             var rank = p.rank;
             var file = p.file;
-            console.log("checking rook rank dir 1");
             for (var ii=rank+1;ii<=8;ii++)
             {
                 var sq = boardArray.find(elem=> (elem.rank == ii && elem.file == file));
-                console.log(ii);
-                console.log(file);
                 if (p.color == 'w')
                 {
                     sq.w=sq.w+1;
@@ -929,8 +926,6 @@ title: Chess Vision
             highlightedArray = [];
             highlightedSquares = [];
             var movedPiece = pieceArray.find(elem => elem.id == pieceImg.id);
-            console.log(selectedPieceId);
-            console.log(pieceImg.id);
             var imgElem = document.getElementById(pieceImg.id);
             if (movedPiece && selectedPieceId == pieceImg.id)
             {
@@ -1263,7 +1258,7 @@ title: Chess Vision
                 var idArray = data.split("_");  // format of lib, bot/top, piece type
                 if (idArray.length == 0 || idArray[0] != "lib")
                 {
-                    // didn't drop from library
+                    // didnt drop from library
                     return;
                 }
                 var color = ((boardDir == 1 && idArray[1] == "bot") || (boardDir == -1 && idArray[1] == "top")) ? 'w' : 'b';
@@ -1301,7 +1296,6 @@ title: Chess Vision
                 var foundIndex = -1;
                 var p;
                 var indx=0;
-                //console.log(pieceArray);
                 for (p of pieceArray)
                 {
                     if (p.id == data)
