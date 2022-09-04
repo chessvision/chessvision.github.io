@@ -932,10 +932,11 @@ title: Chess Vision
                 // previously selected, so unselect
                 selectedPieceId = "";
                 movedPiece = pieceArray.find(elem => elem.id == "");
-
+                console.log('unselect');
             } else if (movedPiece)
             {
                 selectedPieceId = pieceImg.id;
+                console.log('select');
             }
 
             previewMove(movedPiece,'click',highlightedSquares);
