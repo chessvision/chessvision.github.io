@@ -62,7 +62,7 @@ title: Chess Vision
                                 <img id='leg_6' src='img/pawn_b.png' style='position:absolute; left:15px; top:19px;' class="selectedPieceCSS"/>
                             </td>
                             <td style="max-width: 300px">
-                                Click on piece to represent picking it up.  Attacks from this piece are not included on the board until it is placed somewhere.  Drag and drop to move the piece.
+                                Click on piece to represent picking it up.  Attacks from this piece are not included on the board until it is placed somewhere.  Select square or opposing piece to move to.
                             </td>
                         </tr>
                         <tr>
@@ -87,7 +87,7 @@ title: Chess Vision
                         </tr>
                         <tr>
                             <td  colspan="2" style="max-width: 300px">
-                                <b>Moving Pieces:</b> Drag and drop, not limited to valid moves.  Move any piece, anywhere.<br /><br />Move onto opposing piece to capture and remove opposing piece from play.<br /><br />Although castling is not shown as a valid move, you can castle by moving the King and the Rook separately.<br/><br/>Pawn captures en passant are not yet shown as a valid move.
+                                <b>Moving Pieces:</b> Select a piece to pick it up, select on empty square or opposing piece to move to.<br/><br/>Alternatively, drag and drop any piece, anywhere.<br /><br />Although castling is not shown as a valid move, you can castle by dragging and dropping the King and the Rook separately.<br/><br/>Pawn captures en passant are not shown as valid moves - use drag and drop.
                             </td>
                         </tr>
                         <tr>
@@ -95,7 +95,7 @@ title: Chess Vision
                         </tr>
                         <tr>
                             <td  colspan="2" style="max-width: 300px">
-                                <b>Adding/Removing Pieces:</b> Use bins on left or right to remove piece from play, or add piece back into play.  
+                                <b>Adding/Removing Pieces:</b> Drag and drop to/from bins on left or right to remove piece, or add piece back into play.  
                             </td>
                         </tr>
                     </table>
@@ -923,23 +923,69 @@ title: Chess Vision
 
         function pieceClick(pieceImg)
         {
-            highlightedArray = [];
             highlightedSquares = [];
-            var movedPiece = pieceArray.find(elem => elem.id == pieceImg.id);
-            var imgElem = document.getElementById(pieceImg.id);
+            let skipPreview = false;
+            var movedPiece = pieceArray.find(elem => elem.id == pieceImg.id);          
             if (movedPiece && selectedPieceId == pieceImg.id)
             {
-                // previously selected, so unselect
+                // previously selected, so unselect this piece
                 selectedPieceId = "";
                 movedPiece = pieceArray.find(elem => elem.id == "");
-                console.log('unselect');
-            } else if (movedPiece)
+            } else if (!selectedPieceId && movedPiece)
             {
+                // selected a piece when one was not selected before
                 selectedPieceId = pieceImg.id;
-                console.log('select');
+            } else {
+                // clicked somewhere else
+                // check if click is on valid move
+                if (selectedPieceId && pieceImg.id)
+                {
+                    let idParts = pieceImg.id.split("_");
+                    if (idParts.length == 3)
+                    {
+                        //let validMoveTo = undefined;
+                        let trgtRank = "";
+                        let trgtFile = "";
+                        if (idParts[0] == "sq")
+                        {
+                            // selected on a square - make sure it is valid
+                            let validMoveTo = highlightedArray.find(elem => elem.rank == idParts[1] && elem.file == idParts[2]);
+                            if (validMoveTo)
+                            {
+                                trgtRank = idParts[1];
+                                trgtFile = idParts[2];
+                            }
+                        } else {
+                            // selected on a piece
+                            let trgtPiece = pieceArray.find(elem => elem.id == pieceImg.id);
+                            if (trgtPiece)
+                            {
+                                // make sure it is a valid move
+                                let validMoveTo = highlightedArray.find(elem => elem.rank == trgtPiece.rank && elem.file == trgtPiece.file);
+                                if (validMoveTo)
+                                {
+                                    trgtRank = trgtPiece.rank;
+                                    trgtFile = trgtPiece.file;
+                                }
+                            }
+                        }
+                        if (trgtRank != "" && trgtFile != "")
+                        {
+                            let selectedPiece = pieceArray.find(elem => elem.id == selectedPieceId);
+                            let sqrElem = document.getElementById("sq_"+ trgtRank + "_" + trgtFile);
+                            if (selectedPiece && sqrElem)
+                            {
+                                dropCode(selectedPiece, sqrElem.id, "");
+                                skipPreview = true;
+                            }
+                        }
+                    }
+                }
+                selectedPieceId = "";
             }
 
-            previewMove(movedPiece,'click',highlightedSquares);
+            highlightedArray = [];
+            if (!skipPreview) previewMove(movedPiece,'click',highlightedSquares);
             buildBoard(pieceArray);
         }
 
@@ -1253,6 +1299,13 @@ title: Chess Vision
             selectedPieceId = "";
             var data = ev.dataTransfer.getData("text");
             var movedPiece = pieceArray.find(elem => elem.id == data);
+            var trgtId = ev.target.id;
+
+            dropCode(movedPiece, trgtId, data);
+        }
+
+        function dropCode(movedPiece, trgtId, data)
+        {
             if (!movedPiece)
             {
                 // new piece selected from library
@@ -1289,7 +1342,6 @@ title: Chess Vision
                 movedPiece = { id: pieceInitial + "_" + color + "__"+elementArray.length ,type: idArray[2], color: color, rank: 0, file: 0 };
                 pieceArray.push(movedPiece);
             }
-            var trgtId = ev.target.id;
             var targetIdArry = trgtId.split("_");
             if (targetIdArry[0] == "lib")
             {
